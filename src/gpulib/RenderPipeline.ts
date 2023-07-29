@@ -4,7 +4,7 @@ import { MyGPU } from "./interfaces";
 
 interface PipelineConfig {
   name: string;
-  bindGroup: BindGroup;
+  bindGroupLayout: GPUBindGroupLayout;
 }
 
 export interface RenderPipelineConfig extends PipelineConfig {
@@ -49,7 +49,7 @@ export class RenderPipeline {
     this.renderPipeline = gpu.device.createRenderPipeline({
       label: this.name,
       layout: gpu.device.createPipelineLayout({
-        bindGroupLayouts: [config.bindGroup.getLayout()],
+        bindGroupLayouts: [config.bindGroupLayout],
       }),
       vertex: {
         module: gpu.device.createShaderModule({ code: config.vertex.shaderCode }),
@@ -76,7 +76,9 @@ export class ComputePipeline {
     this.name = config.name;
     this.computePipeline = gpu.device.createComputePipeline({
       label: this.name,
-      layout: config.bindGroup.getPipelineLayout(),
+      layout: gpu.device.createPipelineLayout({
+        bindGroupLayouts: [config.bindGroupLayout],
+      }),
       compute: {
         module: gpu.device.createShaderModule({ code: config.compute.shaderCode }),
         entryPoint: config.compute.entryPoint || "comp_main",

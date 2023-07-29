@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import "./App.css";
 
 import { Boids } from "./Examples/Boids/Boids";
-import { GameOfLife } from "./Examples/GameOfLife/GameOfLife";
+import { GameOfLife } from "./Examples/GameOfLife/GameOfLife2";
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);

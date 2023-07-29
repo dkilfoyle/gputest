@@ -1,4 +1,4 @@
-import { StorageBuffer, UniformBuffer } from "./BaseBuffer";
+import { UniformBuffer } from "./BaseBuffer";
 import { BindGroup } from "./BindGroup";
 import { MyGPU } from "./interfaces";
 import { RenderPipeline } from "./RenderPipeline";
@@ -48,43 +48,39 @@ fn frag_main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
   return finalColor;
 }`;
 
-export function createFullscreenPass(gpu: MyGPU, finalColorBuffer: StorageBuffer) {
-  const paramsUniformBuffer = new UniformBuffer(gpu, {
-    name: "fullscreenQuadParamsUniformBuffer",
-    uniforms: [{ name: "screen_size", type: "vec2<f32>", value: new Float32Array([gpu.width, gpu.height]) }],
-  });
+export class FullscreenPass {
+  paramsUniformBuffer: UniformBuffer;
+  renderPipeline: RenderPipeline;
 
-  const fullscreenQuadBindGroup = new BindGroup(gpu, {
-    name: "fullscreenQuadBindGroup",
-    uniformBuffers: [paramsUniformBuffer],
-    storageBuffers: [finalColorBuffer],
-    storageBufferTypes: ["read-only-storage"],
-  });
+  constructor(public gpu: MyGPU, public bindGroups: BindGroup[]) {
+    this.paramsUniformBuffer = new UniformBuffer(gpu, {
+      name: "fullscreenQuadParamsUniformBuffer",
+      uniforms: { screen_size: { type: "vec2<f32>", value: new Float32Array([gpu.width, gpu.height]) } },
+    });
 
-  const fullscreenQuadPipeline = new RenderPipeline(gpu, {
-    name: "fullscreenQuadRenderPipeline",
-    bindGroup: fullscreenQuadBindGroup,
-    vertex: { shaderCode: fullscreenQuadWGSL },
-    fragment: { shaderCode: fullscreenQuadWGSL },
-  });
+    this.renderPipeline = new RenderPipeline(gpu, {
+      name: "fullscreenQuadRenderPipeline",
+      bindGroupLayout: bindGroups[0].getLayout(),
+      vertex: { shaderCode: fullscreenQuadWGSL },
+      fragment: { shaderCode: fullscreenQuadWGSL },
+    });
+  }
 
-  const addFullscreenPass = (commandEncoder: GPUCommandEncoder) => {
-    paramsUniformBuffer.write(0, new Float32Array([gpu.width, gpu.height]));
+  doPass(commandEncoder: GPUCommandEncoder, step: number) {
+    this.paramsUniformBuffer.write(0, new Float32Array([this.gpu.width, this.gpu.height]));
     const passEncoder = commandEncoder.beginRenderPass({
       colorAttachments: [
         {
-          view: gpu.context.getCurrentTexture().createView(),
+          view: this.gpu.context.getCurrentTexture().createView(),
           clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
           loadOp: "clear",
           storeOp: "store",
         },
       ],
     });
-    passEncoder.setPipeline(fullscreenQuadPipeline.get());
-    passEncoder.setBindGroup(0, fullscreenQuadBindGroup.get());
+    passEncoder.setPipeline(this.renderPipeline.get());
+    passEncoder.setBindGroup(0, this.bindGroups[step].get());
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
-  };
-
-  return { addFullscreenPass };
+  }
 }

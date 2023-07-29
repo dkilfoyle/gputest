@@ -260,4 +260,12 @@ export class StorageBuffer extends BaseBuffer {
   getBuffer() {
     return this.buffer;
   }
+
+  getCopy(gpu: MyGPU) {
+    return new StorageBuffer(gpu, {
+      name: this.name + "_out",
+      byteLength: this.byteLength,
+      attributes: this.attributes,
+    });
+  }
 }

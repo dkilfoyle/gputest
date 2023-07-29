@@ -67,14 +67,14 @@ export const GameOfLife = async (canvas: HTMLCanvasElement) => {
   const setupPipelines = () => {
     const renderPipeline = new RenderPipeline(gpu, {
       name: "renderPipeline",
-      bindGroup: bindGroups[0],
+      bindGroupLayout: bindGroups[0].getLayout(),
       vertex: { shaderCode: renderWGSL, buffer: square.vertexBuffer },
       fragment: { shaderCode: renderWGSL },
     });
 
     const computePipeline = new ComputePipeline(gpu, {
       name: "computePipeline",
-      bindGroup: bindGroups[0],
+      bindGroupLayout: bindGroups[0].getLayout(),
       compute: { shaderCode: computeWGSL },
     });
 

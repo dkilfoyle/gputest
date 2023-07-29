@@ -104,13 +104,6 @@ export class BindGroup {
     });
   }
 
-  getPipelineLayout(): GPUPipelineLayout {
-    return this.device.createPipelineLayout({
-      label: "Cell Pipeline Layout",
-      bindGroupLayouts: [this.getLayout()],
-    });
-  }
-
   getShaderCode(): string {
     let source = "";
 
