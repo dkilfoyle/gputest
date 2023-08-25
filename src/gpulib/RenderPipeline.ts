@@ -48,9 +48,10 @@ export class RenderPipeline {
     this.name = config.name;
     this.renderPipeline = gpu.device.createRenderPipeline({
       label: this.name,
-      layout: gpu.device.createPipelineLayout({
-        bindGroupLayouts: [config.bindGroupLayout],
-      }),
+      // layout: gpu.device.createPipelineLayout({
+      //   bindGroupLayouts: [config.bindGroupLayout],
+      // }),
+      layout: "auto",
       vertex: {
         module: gpu.device.createShaderModule({ code: config.vertex.shaderCode }),
         entryPoint: config.vertex.entryPoint || "vert_main",
@@ -79,6 +80,7 @@ export class ComputePipeline {
       layout: gpu.device.createPipelineLayout({
         bindGroupLayouts: [config.bindGroupLayout],
       }),
+      // layout: "auto",
       compute: {
         module: gpu.device.createShaderModule({ code: config.compute.shaderCode }),
         entryPoint: config.compute.entryPoint || "comp_main",

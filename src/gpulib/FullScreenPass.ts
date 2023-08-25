@@ -9,6 +9,7 @@ struct ColorData {
 };
 
 struct Params {
+  grid_size: vec2<f32>,
   screen_size: vec2<f32>
 };
 
@@ -36,28 +37,26 @@ fn vert_main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
 
 @fragment
 fn frag_main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
-  let X = floor(coord.x);
-  let Y = floor(coord.y);
-  let index = u32(X + Y * params.screen_size.x) * 3u;
-
-  let R = f32(finalColorBuffer.data[index + 0u]) / 255.0;
-  let G = f32(finalColorBuffer.data[index + 1u]) / 255.0;
-  let B = f32(finalColorBuffer.data[index + 2u]) / 255.0;
-
-  let finalColor = vec4<f32>(R, G, B, 1.0);
+  // let X = floor(coord.x);
+  // let Y = floor(coord.y);
+  // let index = u32(X + Y * params.screen_size.x) * 3u;
+  // let R = f32(finalColorBuffer.data[index + 0u]) / 255.0;
+  // let G = f32(finalColorBuffer.data[index + 1u]) / 255.0;
+  // let B = f32(finalColorBuffer.data[index + 2u]) / 255.0;
+  // let finalColor = vec4<f32>(R, G, B, 1.0);
+  
+  let X = floor(coord.x / 512.0 * 32.0);
+  let Y = floor(coord.y / 512.0 * 32.0);
+  let index = u32(X + (Y*32.0));
+  let R = f32(finalColorBuffer.data[index + 0u]);
+  let finalColor = vec4<f32>(R, R, R, 1.0);
   return finalColor;
 }`;
 
 export class FullscreenPass {
-  paramsUniformBuffer: UniformBuffer;
   renderPipeline: RenderPipeline;
 
   constructor(public gpu: MyGPU, public bindGroups: BindGroup[]) {
-    this.paramsUniformBuffer = new UniformBuffer(gpu, {
-      name: "fullscreenQuadParamsUniformBuffer",
-      uniforms: { screen_size: { type: "vec2<f32>", value: new Float32Array([gpu.width, gpu.height]) } },
-    });
-
     this.renderPipeline = new RenderPipeline(gpu, {
       name: "fullscreenQuadRenderPipeline",
       bindGroupLayout: bindGroups[0].getLayout(),
@@ -67,7 +66,7 @@ export class FullscreenPass {
   }
 
   doPass(commandEncoder: GPUCommandEncoder, step: number) {
-    this.paramsUniformBuffer.write(0, new Float32Array([this.gpu.width, this.gpu.height]));
+    // this.paramsUniformBuffer.write(0, new Float32Array([this.gpu.width, this.gpu.height, ...this.bufferDims]));
     const passEncoder = commandEncoder.beginRenderPass({
       colorAttachments: [
         {

@@ -1,7 +1,9 @@
 import { StorageBuffer, UniformBuffer } from "./BaseBuffer";
 import { BindGroup } from "./BindGroup";
+import { FullscreenPass } from "./FullScreenPass";
 import { Geometry } from "./Geometry";
 import { ComputePipeline, RenderPipeline } from "./RenderPipeline";
+import { Texture } from "./Texture";
 import { MyGPU } from "./interfaces";
 
 export interface FrameConfig {
@@ -11,6 +13,12 @@ export interface FrameConfig {
 
 export interface Frame2DConfig extends FrameConfig {
   computeWGSL: string;
+  bufferDims: number[];
+}
+
+export interface Frame2DTextureConfig extends FrameConfig {
+  computeWGSL: string;
+  textureDims: number[];
 }
 
 export interface Frame3DConfig extends FrameConfig {
@@ -35,27 +43,31 @@ export class PingPongFrame {
   constructor(gpu: MyGPU, config: FrameConfig) {
     this.gpu = gpu;
     this.uniformBuffer = config.uniformBuffer;
+    config.storageBuffer.name += "_A";
+    this.storageBuffers = [config.storageBuffer, config.storageBuffer.getCopy(gpu, "_B")];
 
-    this.storageBuffers = [config.storageBuffer, config.storageBuffer.getCopy(gpu)];
+    this.bindGroups = this.createBindGroups();
+  }
 
-    this.bindGroups = [
-      new BindGroup(gpu, {
+  doComputeAndRenderPass(config: FramePassConfig) {
+    return;
+  }
+
+  createBindGroups() {
+    return [
+      new BindGroup(this.gpu, {
         name: "bindGroup0",
         uniformBuffers: [this.uniformBuffer],
         storageBuffers: [this.storageBuffers[0], this.storageBuffers[1]],
         storageBufferTypes: ["read-only-storage", "storage"],
       }),
-      new BindGroup(gpu, {
+      new BindGroup(this.gpu, {
         name: "bindGroup1",
         uniformBuffers: [this.uniformBuffer],
         storageBuffers: [this.storageBuffers[1], this.storageBuffers[0]],
         storageBufferTypes: ["read-only-storage", "storage"],
       }),
     ];
-  }
-
-  doComputeAndRenderPass(config: FramePassConfig) {
-    return;
   }
 }
 
@@ -108,6 +120,37 @@ export class Frame3D extends PingPongFrame {
     this.bindGroups[this.pingPong % 2].bind(renderPass);
     this.geometry[0].draw(renderPass, config.instances);
     renderPass.end();
+    this.gpu.device.queue.submit([encoder.finish()]);
+  }
+}
+
+export class Frame2D extends PingPongFrame {
+  private computePipeline: ComputePipeline;
+  private fullScreenPass: FullscreenPass;
+  private bufferDims: number[];
+  constructor(gpu: MyGPU, config: Frame2DConfig) {
+    super(gpu, config);
+    this.bufferDims = config.bufferDims;
+    this.computePipeline = new ComputePipeline(gpu, {
+      name: "computePipeline",
+      bindGroupLayout: this.bindGroups[0].getLayout(),
+      compute: { shaderCode: config.computeWGSL },
+    });
+    this.fullScreenPass = new FullscreenPass(gpu, this.bindGroups);
+  }
+
+  doComputeAndRenderPass(config: FramePassConfig) {
+    const encoder = this.gpu.device.createCommandEncoder();
+
+    // Start a compute pass
+    const computePass = encoder.beginComputePass();
+    computePass.setPipeline(this.computePipeline.get());
+    this.bindGroups[this.pingPong++ % 2].bind(computePass);
+    computePass.dispatchWorkgroups(config.workgroupCount[0], config.workgroupCount[1]);
+    computePass.end();
+
+    // do a full screen render pass
+    this.fullScreenPass.doPass(encoder, this.pingPong % 2);
     this.gpu.device.queue.submit([encoder.finish()]);
   }
 }

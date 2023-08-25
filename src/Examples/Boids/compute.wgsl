@@ -25,7 +25,7 @@ fn cellActive(x: u32, y: u32) -> u32 {
 }
 
 @compute @workgroup_size(8,8)
-fn computeMain(@builtin(global_invocation_id) cell: vec3u) {
+fn comp_main(@builtin(global_invocation_id) cell: vec3u) {
   // Determine how many active neighbors this cell has.
   let activeNeighbors = cellActive(cell.x+1, cell.y+1) +
                         cellActive(cell.x+1, cell.y) +

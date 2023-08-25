@@ -196,6 +196,7 @@ export class UniformBuffer extends BaseBuffer {
   public uniforms: Record<string, AlignedUniform>;
   constructor(gpu: MyGPU, { name, uniforms, usage = GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM, debugLabel }: UniformBufferConfig) {
     const [byteLength, alignedUniforms] = alignUniformsToStd140Layout(uniforms);
+    console.log(byteLength, alignedUniforms);
     super(gpu.device, {
       byteLength,
       usage,
@@ -261,11 +262,12 @@ export class StorageBuffer extends BaseBuffer {
     return this.buffer;
   }
 
-  getCopy(gpu: MyGPU) {
+  getCopy(gpu: MyGPU, suffix = "_copy") {
     return new StorageBuffer(gpu, {
-      name: this.name + "_out",
+      name: this.name + suffix,
       byteLength: this.byteLength,
       attributes: this.attributes,
+      stride: this.stride,
     });
   }
 }

@@ -1,4 +1,5 @@
 import { StorageBuffer, UniformBuffer } from "./BaseBuffer";
+import { Texture } from "./Texture";
 import { MyGPU } from "./interfaces";
 
 const toFirstLetterLowerCase = (x: string) => {
@@ -11,6 +12,7 @@ export interface BindGroupConfig {
   uniformBuffers?: UniformBuffer[];
   storageBuffers?: StorageBuffer[];
   storageBufferTypes?: GPUBufferBindingType[];
+  // textures?: Texture[];
 }
 
 export class BindGroup {
@@ -31,6 +33,7 @@ export class BindGroup {
     this.uniformBuffers = config.uniformBuffers || [];
     this.storageBuffers = config.storageBuffers || [];
     this.storageBufferTypes = config.storageBufferTypes || [];
+    // this.textures = config.textures || [];
     return this.create();
   }
 
@@ -56,22 +59,35 @@ export class BindGroup {
 
   getLayout() {
     // const bindGroupLayout = gpu.device.createBindGroupLayout({
-    //   label: "Cell Bind Group Layout",
+    //   label: "My Bind Group Layout",
     //   entries: [
     //     {
-    //       binding: 0,
+    //       binding: 0, // setup options
     //       visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE,
-    //       buffer: {}, // Grid uniform buffer
+    //       buffer: {},
     //     },
     //     {
-    //       binding: 1,
+    //       binding: 1, // input data for compute shader
     //       visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE,
-    //       buffer: { type: "read-only-storage" }, // Cell state input buffer
+    //       buffer: { type: "read-only-storage" },
     //     },
     //     {
-    //       binding: 2,
+    //       binding: 2, // output data from compute shader - will be input for next frame
     //       visibility: GPUShaderStage.COMPUTE,
     //       buffer: { type: "storage" }, // Cell state output buffer
+    //     },
+    //     {
+    //       binding: 3, // input texture for compute shader
+    //       visibility: GPUShaderStage.COMPUTE,
+    //       texture: { multisampled: false }
+    //     },
+    //     {
+    //       binding: 4, // output texture for compute shader
+    //       visibility: GPUShaderStage.COMPUTE,
+    //       storageTexture: {
+    //         access: 'write-only',
+    //         format: computeTexFormat,
+    //       }
     //     },
     //   ],
     // });
@@ -139,6 +155,7 @@ struct ${sb.name} {
     const entries: GPUBindGroupEntry[] = [];
     let accBindingIndex = 0;
     this.uniformBuffers.forEach((buffer) => {
+      console.log("buffer", buffer);
       entries.push({
         binding: accBindingIndex++,
         resource: {
