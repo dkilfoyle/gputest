@@ -28,6 +28,7 @@ fn at2(x: i32, y: i32) -> vec4<f32> {
 
 @compute @workgroup_size(14,1)
 fn Simulate(@builtin(global_invocation_id) global_id: vec3u) {
+  dbg_init(u32(global_id.x));
   let pid = i32(global_id.x);
   let p = particlesIn[pid];
 
@@ -43,6 +44,8 @@ fn Simulate(@builtin(global_invocation_id) global_id: vec3u) {
   particlesOut[pid].pos = p.pos + (newVel * 0.1);
   particlesOut[pid].vel = newVel;
 
+  dbg_f32m(0, particlesOut[pid].pos.x);
+  dbg_f32m(1, particlesOut[pid].pos.y);
 
   let c = vec4f(0.8, 0.5, 0.2, 1.0);
   // textureStore(dstTexture, vec2<i32>(i32(p.pos.x), i32(p.pos.y)), c);

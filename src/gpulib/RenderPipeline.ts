@@ -4,7 +4,7 @@ import { MyGPU } from "./interfaces";
 
 interface PipelineConfig {
   name: string;
-  bindGroupLayout: GPUBindGroupLayout;
+  bindGroupLayouts: GPUBindGroupLayout[];
 }
 
 export interface RenderPipelineConfig extends PipelineConfig {
@@ -78,7 +78,7 @@ export class ComputePipeline {
     this.computePipeline = gpu.device.createComputePipeline({
       label: this.name,
       layout: gpu.device.createPipelineLayout({
-        bindGroupLayouts: [config.bindGroupLayout],
+        bindGroupLayouts: config.bindGroupLayouts,
       }),
       // layout: "auto",
       compute: {

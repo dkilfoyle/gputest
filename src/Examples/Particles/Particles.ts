@@ -56,8 +56,8 @@ export const GPUApp = async (canvas: HTMLCanvasElement) => {
 
   let step = 0;
 
-  function animateFrame() {
-    frame.doComputeAndRenderPass();
+  async function animateFrame() {
+    await frame.doComputeAndRenderPass();
     if (step++ < 200) requestAnimationFrame(animateFrame);
   }
 
